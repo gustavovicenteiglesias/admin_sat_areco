@@ -21,10 +21,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import type { CortoPlazo } from "../types/cortoplazo";
 import { cpGet, cpCreate, cpUpdateSmart } from "../data/cortoplazo.repo";
+import imagen13m from "../assets/cortoplazo/13m.png";
+import imagen14m from "../assets/cortoplazo/14m.png";
+import imagen21m from "../assets/cortoplazo/21m.png";
 
 type RouteParams = { id?: string };
 
 const IMAGENES = ["13m.png", "14m.png", "21m.png"];
+const IMAGEN_PREVIEW: Record<string, string> = {
+  "13m.png": imagen13m,
+  "14m.png": imagen14m,
+  "21m.png": imagen21m,
+};
 const DURACIONES_H = [1, 2, 3]; // horas
 
 const EMPTY: CortoPlazo = {
@@ -209,6 +217,16 @@ export default function CortoplazoForm() {
             </IonSelect>
           </IonItem>
 
+          {model.imagen && IMAGEN_PREVIEW[model.imagen] && (
+            <IonItem>
+              <IonLabel position="stacked">Vista previa</IonLabel>
+              <img
+                src={IMAGEN_PREVIEW[model.imagen]}
+                alt={`Vista previa de ${model.imagen}`}
+                style={{ width: 96, height: 96, objectFit: "contain", margin: "12px 0" }}
+              />
+            </IonItem>
+          )}
           {/* Duración por SELECT (horas) */}
           <IonItem>
             <IonLabel position="stacked">Duración</IonLabel>

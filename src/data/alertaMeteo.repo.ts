@@ -20,11 +20,11 @@ export async function meteoGet(id: number): Promise<AlertaMeteo> {
   return unwrap<AlertaMeteo>(res);
 }
 
-export async function meteoCreate(payload: Partial<AlertaMeteo>, firePushIfActive = true): Promise<AlertaMeteo> {
+export async function meteoCreate(payload: Partial<AlertaMeteo>, sound?: "default" | "sirena"): Promise<AlertaMeteo> {
   const res = await http.post(`${BASE}`, payload, { headers: authHeader() });
   const saved = unwrap<AlertaMeteo>(res);
-  if (firePushIfActive && saved?.estado) {
-    await http.post(`${PUSH}/${saved.id}`, {}, { headers: authHeader() });
+  if (sound && saved?.estado) {
+    await http.post(`${PUSH}/${saved.id}`, { sound }, { headers: authHeader() });
   }
   return saved;
 }
@@ -34,12 +34,13 @@ export async function meteoUpdateSmart(
   id: number,
   payload: Partial<AlertaMeteo>,
   prevEstado: boolean,
-  newEstado: boolean
+  newEstado: boolean,
+  sound?: "default" | "sirena"
 ): Promise<AlertaMeteo> {
   const res = await http.put(`${BASE}/${id}`, payload, { headers: authHeader() });
   const updated = unwrap<AlertaMeteo>(res);
-  if (!prevEstado && newEstado) {
-    await http.post(`${PUSH}/${updated.id}`, {}, { headers: authHeader() });
+  if (sound && newEstado) {
+    await http.post(`${PUSH}/${updated.id}`, { sound }, { headers: authHeader() });
   }
   return updated;
 }

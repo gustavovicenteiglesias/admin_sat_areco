@@ -1,3 +1,4 @@
+export type PushMode = "none" | "default" | "sirena";
 export type TipoAlerta = "AMARILLO" | "NARANJA" | "ROJO"; // extendé si hay más
 
 export interface AlertaMeteo {

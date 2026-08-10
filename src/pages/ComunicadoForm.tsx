@@ -36,6 +36,7 @@ const EMPTY: ComunicadoDTO = {
   titulo: "",
   alerta: "",
   contenido: "",
+  fuente: "",
   estado: true,
   idCategoria: 0,
 };
@@ -48,6 +49,7 @@ export default function ComunicadoForm() {
   const [model, setModel] = useState<ComunicadoDTO>({ ...EMPTY });
   const [categorias, setCategorias] = useState<CategoriaComu[]>([]);
   const [saving, setSaving] = useState(false);
+  const [pushMode, setPushMode] = useState<"none" | "default" | "sirena">("default");
   const [toast, setToast] = useState<{ open: boolean; msg: string }>({
     open: false,
     msg: "",
@@ -102,12 +104,14 @@ export default function ComunicadoForm() {
         titulo: model.titulo,
         alerta: model.alerta ?? "",
         contenido: model.contenido ?? "",
+        fuente: model.fuente ?? "",
         estado: !!model.estado,
         idCategoria: model.idCategoria, // 👈 Long en back
       };
 
-      if (editId) await comunicadoUpdate(editId, payload);
-      else await comunicadoCreate(payload);
+      const sound = pushMode === "none" ? undefined : pushMode;
+      if (editId) await comunicadoUpdate(editId, payload, sound);
+      else await comunicadoCreate(payload, sound);
 
       setToast({ open: true, msg: "Guardado" });
       history.replace("/comunicados");
@@ -175,6 +179,20 @@ export default function ComunicadoForm() {
             />
           </IonItem>
           <IonItem>
+            <IonLabel position="stacked">Fuente (opcional)</IonLabel>
+            <IonInput
+              value={model.fuente ?? ""}
+              onIonChange={(e) => setField("fuente", e.detail.value!)}
+            />
+          </IonItem>
+          <IonItem>
+            <IonLabel position="stacked">Notificación al guardar</IonLabel>
+            <IonSelect value={pushMode} onIonChange={(e) => setPushMode(e.detail.value)}>
+              <IonSelectOption value="none">No enviar push</IonSelectOption>
+              <IonSelectOption value="default">Push con sonido normal</IonSelectOption>
+              <IonSelectOption value="sirena">Push con sirena</IonSelectOption>
+            </IonSelect>
+          </IonItem>          <IonItem>
           <IonLabel position="stacked">Tipo</IonLabel>
           <IonSelect
             interface="popover"

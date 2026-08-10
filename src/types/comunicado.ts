@@ -5,6 +5,7 @@ export interface ComunicadoDTO {
   titulo: string;
   alerta?: string | null;
   contenido?: string | null;
+  fuente?: string | null;
   estado: boolean;
   idCategoria: number;   // Long en back, number en TS
 

@@ -6,6 +6,7 @@ import type { ComunicadoDTO, CategoriaComu } from "../types/comunicado";
 
 const BASE = `${URL_API}/v1/comunicados`;
 const CATEG = `${URL_API}/v1/categorias-comunicados`; // 👈 ruta real
+const PUSH = `${URL_API}/v1/push/comunicado`;
 
 function unwrap<T>(res: any): T {
   return res?.data?.data as T;
@@ -30,14 +31,18 @@ export async function comunicadoGet(id: number): Promise<ComunicadoDTO> {
   return unwrap<ComunicadoDTO>(res);
 }
 
-export async function comunicadoCreate(dto: Partial<ComunicadoDTO>): Promise<ComunicadoDTO> {
+export async function comunicadoCreate(dto: Partial<ComunicadoDTO>, sound?: "default" | "sirena"): Promise<ComunicadoDTO> {
   const res = await http.post(BASE, dto, { headers: authHeader() });
-  return unwrap<ComunicadoDTO>(res);
+  const saved = unwrap<ComunicadoDTO>(res);
+  if (sound && saved.estado) await http.post(`${PUSH}/${saved.idcomunicado}`, { sound }, { headers: authHeader() });
+  return saved;
 }
 
-export async function comunicadoUpdate(id: number, dto: Partial<ComunicadoDTO>): Promise<ComunicadoDTO> {
+export async function comunicadoUpdate(id: number, dto: Partial<ComunicadoDTO>, sound?: "default" | "sirena"): Promise<ComunicadoDTO> {
   const res = await http.put(`${BASE}/${id}`, dto, { headers: authHeader() });
-  return unwrap<ComunicadoDTO>(res);
+  const saved = unwrap<ComunicadoDTO>(res);
+  if (sound && saved.estado) await http.post(`${PUSH}/${saved.idcomunicado}`, { sound }, { headers: authHeader() });
+  return saved;
 }
 
 export async function comunicadoDelete(id: number): Promise<void> {

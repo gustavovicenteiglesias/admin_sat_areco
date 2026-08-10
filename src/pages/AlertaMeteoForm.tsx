@@ -30,6 +30,7 @@ export default function AlertaMeteoForm() {
   const [model, setModel] = useState<AlertaMeteo>({ ...EMPTY });
   const [originalEstado, setOriginalEstado] = useState<boolean>(false);
   const [saving, setSaving] = useState(false);
+  const [pushMode, setPushMode] = useState<"none" | "default" | "sirena">("default");
   const [toast, setToast] = useState<{open:boolean; msg:string}>({open:false, msg:""});
 
   useEffect(() => {
@@ -77,9 +78,9 @@ export default function AlertaMeteoForm() {
       };
 
       if (editId) {
-        await meteoUpdateSmart(editId, payload, originalEstado, !!model.estado);
+        await meteoUpdateSmart(editId, payload, originalEstado, !!model.estado, pushMode === "none" ? undefined : pushMode);
       } else {
-        await meteoCreate(payload, true);
+        await meteoCreate(payload, pushMode === "none" ? undefined : pushMode);
       }
 
       const msg = editId
@@ -145,7 +146,15 @@ export default function AlertaMeteoForm() {
           </IonItem>
 
           <IonItem>
-            <IonLabel>Activo (enviar push al guardar)</IonLabel>
+            <IonLabel position="stacked">Notificación al guardar</IonLabel>
+            <IonSelect value={pushMode} onIonChange={(e) => setPushMode(e.detail.value)}>
+              <IonSelectOption value="none">No enviar push</IonSelectOption>
+              <IonSelectOption value="default">Push con sonido normal</IonSelectOption>
+              <IonSelectOption value="sirena">Push con sirena</IonSelectOption>
+            </IonSelect>
+          </IonItem>
+          <IonItem>
+            <IonLabel>Activo / publicado</IonLabel>
             <IonToggle checked={!!model.estado} onIonChange={(e)=>setField("estado", e.detail.checked)} />
           </IonItem>
 
