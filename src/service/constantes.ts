@@ -1,0 +1,1 @@
+export const URL_API="http://localhost:8093/api"//"https://api.alerta.areco.ar/api"//"http://localhost:8093/api"//
