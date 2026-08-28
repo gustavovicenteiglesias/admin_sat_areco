@@ -1,0 +1,58 @@
+.mapa-file-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--ion-color-step-150, #333);
+}
+
+.mapa-file-field label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.mapa-file-field input[type="file"] {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+}
+
+.mapa-file-field ion-note {
+  display: block;
+  line-height: 1.35;
+}
+
+.mapa-lineas,
+.mapa-archivos {
+  padding: 18px 16px;
+}
+
+.mapa-lineas > h3,
+.mapa-archivos > h3 {
+  margin: 0 0 8px;
+}
+
+.mapa-linea-card {
+  margin-top: 16px;
+  padding: 10px 0 14px;
+  border-top: 1px solid var(--ion-color-step-150, #333);
+}
+
+.mapa-linea-card ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+}
+
+.mapa-linea-card ion-range {
+  padding-top: 12px;
+}
+
+@media (max-width: 480px) {
+  .mapa-file-field,
+  .mapa-lineas,
+  .mapa-archivos {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}

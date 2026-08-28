@@ -8,7 +8,7 @@ import {
   pulseOutline, flashOutline, megaphoneOutline, homeOutline,
   logInOutline, logOutOutline, personCircleOutline,
   waterOutline,settingsOutline,
-  callOutline
+  callOutline, mapOutline
 } from "ionicons/icons";
 import type { user } from "../types/user";
 import { useEffect, useState } from "react";
@@ -24,6 +24,7 @@ const appPages = [
   { title: "Alertas meteorológicas", url: "/alertameteorologica", icon: flashOutline },
   { title: "Configuración", url: "/settings", icon: settingsOutline },
   { title: "Teléfonos", url: "/telefonos", icon: callOutline },
+  { title: "SAT Mapas", url: "/mapas", icon: mapOutline },
   
 ];
 

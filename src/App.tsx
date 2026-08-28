@@ -35,6 +35,8 @@ import RegistroList from "./pages/RegistroList";
 import SettingsPage from "./pages/SettingsPage";
 import TelefonoForm from "./pages/TelefonoForm";
 import TelefonosList from "./pages/TelefonosList";
+import MapaCapasList from "./pages/MapaCapasList";
+import MapaCapaForm from "./pages/MapaCapaForm";
 
 setupIonicReact();
 const App: React.FC = () => {
@@ -93,6 +95,9 @@ const App: React.FC = () => {
               <Route exact path="/telefonos" component={TelefonosList} />
               <Route exact path="/telefonos/new" component={TelefonoForm} />
               <Route exact path="/telefonos/:id" component={TelefonoForm} />
+              <Route exact path="/mapas" component={MapaCapasList} />
+              <Route exact path="/mapas/new" component={MapaCapaForm} />
+              <Route exact path="/mapas/:id" component={MapaCapaForm} />
               {/* 404 simple */}
 
               <Route path="/login" exact component={LoginGoogle} />
