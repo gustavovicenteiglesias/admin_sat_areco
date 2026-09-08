@@ -1,13 +1,13 @@
 import {
   IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInput, IonItem,
   IonLabel, IonList, IonMenuButton, IonNote, IonPage, IonRange, IonSelect,
-  IonSelectOption, IonTextarea, IonTitle, IonToast, IonToggle, IonToolbar,
+  IonSelectOption, IonSpinner, IonTextarea, IonTitle, IonToast, IonToggle, IonToolbar,
 } from "@ionic/react";
 import { arrowDownOutline, arrowUpOutline, trashOutline } from "ionicons/icons";
 import { useEffect, useMemo, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import MapaPreview from "../components/MapaPreview";
-import { mapaArchivoDelete, mapaArchivosOrden, mapaCreate, mapaGeojson, mapaGet, mapaUpdate } from "../data/mapas.repo";
+import { mapaArchivoDelete, mapaArchivoUpdate, mapaArchivosOrden, mapaCreate, mapaGeojson, mapaGet, mapaUpdate } from "../data/mapas.repo";
 import type { MapaCapa, MapaLineaConfig } from "../types/mapaCapa";
 import "./MapaCapaForm.css";
 
@@ -52,6 +52,7 @@ export default function MapaCapaForm() {
   }, [editId]);
 
   const save = async () => {
+    if (saving) return;
     if (!model.nombre.trim() || (!editId && !mapFile)) {
       setToast({ open: true, msg: "Completá el nombre y seleccioná un KML o KMZ", color: "warning" }); return;
     }
@@ -84,6 +85,19 @@ export default function MapaCapaForm() {
     } catch { setToast({ open: true, msg: "No se pudo eliminar el archivo", color: "danger" }); }
   };
 
+  const toggleFile = async (index: number, visible: boolean) => {
+    if (!editId || !model.archivos) return;
+    const archivos = [...model.archivos];
+    archivos[index] = { ...archivos[index], visible };
+    setField("archivos", archivos);
+    try {
+      archivos[index] = await mapaArchivoUpdate(editId, archivos[index]);
+      setField("archivos", [...archivos]);
+    } catch {
+      setToast({ open: true, msg: "No se pudo cambiar la publicación del archivo", color: "danger" });
+    }
+  };
+
   return <IonPage>
     <IonHeader><IonToolbar><IonButtons slot="start"><IonMenuButton /></IonButtons><IonTitle>{editId ? "Editar capa" : "Nueva capa"}</IonTitle></IonToolbar></IonHeader>
     <IonContent><IonList>
@@ -110,6 +124,7 @@ export default function MapaCapaForm() {
       <div className="mapa-file-field"><label htmlFor="mapa-adjuntos">Imágenes y PDF (opcionales, carga múltiple)</label><input id="mapa-adjuntos" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf" onChange={e => setNewFiles(Array.from(e.target.files ?? []))} /><IonNote>{newFiles.length ? `${newFiles.length} archivo(s) seleccionado(s)` : "Podés combinar varias imágenes y PDF"}</IonNote></div>
       {!!model.archivos?.length && <section className="mapa-archivos"><h3>Archivos cargados</h3>{model.archivos.map((archivo, index) => <IonItem key={archivo.id}>
         <IonLabel><h2>{archivo.nombreArchivo}</h2><p>{archivo.tipo}</p></IonLabel>
+        <IonLabel>Visible</IonLabel><IonToggle checked={archivo.visible} onIonChange={e => toggleFile(index, e.detail.checked)} />
         <IonButton fill="clear" disabled={index === 0} onClick={() => moveFile(index, -1)}><IonIcon icon={arrowUpOutline} /></IonButton>
         <IonButton fill="clear" disabled={index === model.archivos!.length - 1} onClick={() => moveFile(index, 1)}><IonIcon icon={arrowDownOutline} /></IonButton>
         <IonButton fill="clear" color="danger" onClick={() => deleteFile(archivo.id)}><IonIcon icon={trashOutline} /></IonButton>
@@ -119,7 +134,7 @@ export default function MapaCapaForm() {
     </IonList>
     {geojson && <section className="ion-padding"><h2>Vista previa</h2><MapaPreview geojson={geojson} color={model.color} opacidad={model.opacidad} configuracionLineas={model.configuracionLineas} /></section>}
     {!editId && <IonNote className="ion-padding ion-display-block">La vista previa estará disponible después de guardar la capa como borrador.</IonNote>}
-    <div className="ion-padding"><IonButton expand="block" disabled={saving} onClick={save}>{saving ? "Guardando…" : "Guardar"}</IonButton><IonButton expand="block" fill="clear" onClick={() => history.push("/mapas")}>Cancelar</IonButton></div>
+    <div className="ion-padding"><IonButton expand="block" disabled={saving} onClick={save}>{saving && <IonSpinner slot="start" name="crescent" />}{saving ? "Guardando…" : "Guardar"}</IonButton><IonButton expand="block" fill="clear" disabled={saving} onClick={() => history.push("/mapas")}>Cancelar</IonButton></div>
     <IonToast isOpen={toast.open} message={toast.msg} color={toast.color} duration={2200} onDidDismiss={() => setToast({ open: false, msg: "", color: "" })} />
     </IonContent>
   </IonPage>;

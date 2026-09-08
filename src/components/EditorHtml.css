@@ -1,0 +1,26 @@
+.editor-html { margin-top: 10px; width: 100%; }
+.editor-html-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 8px; }
+.editor-html-content {
+  min-height: 240px;
+  padding: 14px;
+  border: 1px solid var(--ion-color-step-250);
+  border-radius: 6px;
+  background: var(--ion-item-background, var(--ion-background-color, #fff));
+  color: var(--ion-text-color, #1b1b1b);
+  outline: none;
+}
+.editor-html-content:focus { border-color: var(--ion-color-primary); }
+.editor-html-source {
+  min-height: 280px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--ion-color-step-250);
+  border-radius: 6px;
+  --background: var(--ion-item-background, var(--ion-background-color, #fff));
+  --color: var(--ion-text-color, #1b1b1b);
+  --placeholder-color: var(--ion-color-medium, #666);
+  background: var(--ion-item-background, var(--ion-background-color, #fff));
+  color: var(--ion-text-color, #1b1b1b);
+  font-family: Consolas, "Courier New", monospace;
+  line-height: 1.45;
+}

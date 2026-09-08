@@ -1,0 +1,10 @@
+import http from "../service/http-common";
+import { URL_API } from "../service/constantes";
+import authHeader from "../service/auth-header";
+import type { PeriodoPrecipitacion, PrecipitacionData } from "../types/precipitacion";
+const BASE = `${URL_API}/v1/admin/precipitaciones`;
+const unwrap = <T,>(res: any): T => res.data.data as T;
+export const precipitacionesGet = async () => unwrap<PrecipitacionData>(await http.get(BASE, { headers: authHeader() }));
+export const precipitacionesConfigPut = async (carmenAcumuladaMm: number | null, carmenVisible: boolean) => http.put(`${BASE}/configuracion`, { carmenAcumuladaMm, carmenVisible }, { headers: authHeader() });
+export const precipitacionesPeriodoPut = async (periodo: PeriodoPrecipitacion) => http.put(`${BASE}/periodos`, periodo, { headers: authHeader() });
+export const precipitacionesPeriodoDelete = async (periodo: string) => http.delete(`${BASE}/periodos/${encodeURIComponent(periodo)}`, { headers: authHeader() });

@@ -37,6 +37,10 @@ import TelefonoForm from "./pages/TelefonoForm";
 import TelefonosList from "./pages/TelefonosList";
 import MapaCapasList from "./pages/MapaCapasList";
 import MapaCapaForm from "./pages/MapaCapaForm";
+import RecomendacionesList from "./pages/RecomendacionesList";
+import RecomendacionForm from "./pages/RecomendacionForm";
+import PrecipitacionesPage from "./pages/PrecipitacionesPage";
+import NosotrosPage from "./pages/NosotrosPage";
 
 setupIonicReact();
 const App: React.FC = () => {
@@ -98,6 +102,11 @@ const App: React.FC = () => {
               <Route exact path="/mapas" component={MapaCapasList} />
               <Route exact path="/mapas/new" component={MapaCapaForm} />
               <Route exact path="/mapas/:id" component={MapaCapaForm} />
+              <Route exact path="/recomendaciones" component={RecomendacionesList} />
+              <Route exact path="/recomendaciones/new" component={RecomendacionForm} />
+              <Route exact path="/recomendaciones/:id" component={RecomendacionForm} />
+              <Route exact path="/precipitaciones" component={PrecipitacionesPage} />
+              <Route exact path="/nosotros" component={NosotrosPage} />
               {/* 404 simple */}
 
               <Route path="/login" exact component={LoginGoogle} />

@@ -8,7 +8,7 @@ import {
   pulseOutline, flashOutline, megaphoneOutline, homeOutline,
   logInOutline, logOutOutline, personCircleOutline,
   waterOutline,settingsOutline,
-  callOutline, mapOutline
+  callOutline, mapOutline, bookOutline
 } from "ionicons/icons";
 import type { user } from "../types/user";
 import { useEffect, useState } from "react";
@@ -17,6 +17,7 @@ import authService from "../service/auth.service";
 const appPages = [
   { title: "Home", url: "/home", icon: homeOutline },
   { title: "Registros", url: "/registros", icon: waterOutline },
+  { title: "Estadísticas de precipitación", url: "/precipitaciones", icon: waterOutline },
   
   { title: "Situación", url: "/situacion", icon: pulseOutline },
   { title: "Alertas (corto plazo)", url: "/cortoplazo", icon: flashOutline },
@@ -25,6 +26,8 @@ const appPages = [
   { title: "Configuración", url: "/settings", icon: settingsOutline },
   { title: "Teléfonos", url: "/telefonos", icon: callOutline },
   { title: "SAT Mapas", url: "/mapas", icon: mapOutline },
+  { title: "Recomendaciones", url: "/recomendaciones", icon: bookOutline },
+  { title: "Nosotros", url: "/nosotros", icon: personCircleOutline },
   
 ];
 

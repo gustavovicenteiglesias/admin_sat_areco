@@ -48,6 +48,13 @@ export async function mapaArchivoDelete(capaId: number, archivoId: number): Prom
   await http.delete(`${BASE}/${capaId}/archivos/${archivoId}`, { headers: authHeader() });
 }
 
+export async function mapaArchivoUpdate(capaId: number, archivo: MapaCapaArchivo): Promise<MapaCapaArchivo> {
+  return unwrap(await http.patch(`${BASE}/${capaId}/archivos/${archivo.id}`, {
+    titulo: archivo.titulo ?? "",
+    visible: archivo.visible,
+  }, { headers: authHeader() }));
+}
+
 export async function mapaArchivosOrden(capaId: number, archivos: MapaCapaArchivo[]): Promise<MapaCapaArchivo[]> {
   const items = archivos.map((archivo, orden) => ({ id: archivo.id, orden }));
   return unwrap(await http.put(`${BASE}/${capaId}/archivos/orden`, items, { headers: authHeader() }));
