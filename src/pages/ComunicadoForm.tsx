@@ -17,6 +17,7 @@ import {
   IonSelect,
   IonSelectOption,
 } from "@ionic/react";
+import type { ChangeEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import type { ComunicadoDTO, CategoriaComu } from "../types/comunicado";
@@ -24,8 +25,12 @@ import {
   comunicadoGet,
   comunicadoCreate,
   comunicadoUpdate,
+  comunicadoPush,
+  comunicadoUploadImagen,
+  comunicadoDeleteImagen,
   categoriasComuAll,
 } from "../data/comunicados.repo";
+import { URL_API } from "../service/constantes";
 
 type RouteParams = { id?: string };
 
@@ -48,6 +53,8 @@ export default function ComunicadoForm() {
 
   const [model, setModel] = useState<ComunicadoDTO>({ ...EMPTY });
   const [categorias, setCategorias] = useState<CategoriaComu[]>([]);
+  const [imagen, setImagen] = useState<File | null>(null);
+  const [quitarImagen, setQuitarImagen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pushMode, setPushMode] = useState<"none" | "default" | "sirena">("default");
   const [toast, setToast] = useState<{ open: boolean; msg: string }>({
@@ -88,6 +95,40 @@ export default function ComunicadoForm() {
   const setField = (k: keyof ComunicadoDTO, v: any) =>
     setModel((prev) => ({ ...prev, [k]: v }));
 
+  const normalizar = (valor?: string | null) =>
+    (valor ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toUpperCase();
+
+  const categoriaSeleccionada = categorias.find((c) => c.idCategoria === model.idCategoria);
+  const esCategoriaImagen = normalizar(categoriaSeleccionada?.nombre) === "IMAGEN";
+  const imagenActualUrl = editId && model.tieneImagen
+    ? `${URL_API}/v1/comunicados/${editId}/imagen?v=${editId}`
+    : "";
+
+  const onImagenChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    if (!file) {
+      setImagen(null);
+      return;
+    }
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      setToast({ open: true, msg: "Usá una imagen PNG, JPG o WEBP" });
+      event.target.value = "";
+      setImagen(null);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setToast({ open: true, msg: "La imagen puede pesar como máximo 5 MB" });
+      event.target.value = "";
+      setImagen(null);
+      return;
+    }
+    setQuitarImagen(false);
+    setImagen(file);
+  };
+
   const isValid = () =>
     !!model.fecha && !!model.hora && !!model.titulo && model.idCategoria > 0;
 
@@ -109,9 +150,19 @@ export default function ComunicadoForm() {
         idCategoria: model.idCategoria, // 👈 Long en back
       };
 
-      const sound = pushMode === "none" ? undefined : pushMode;
-      if (editId) await comunicadoUpdate(editId, payload, sound);
-      else await comunicadoCreate(payload, sound);
+      const saved = editId
+        ? await comunicadoUpdate(editId, payload)
+        : await comunicadoCreate(payload);
+
+      if (quitarImagen && saved.idcomunicado) {
+        await comunicadoDeleteImagen(saved.idcomunicado);
+      }
+      if (imagen && saved.idcomunicado) {
+        await comunicadoUploadImagen(saved.idcomunicado, imagen);
+      }
+      if (pushMode !== "none" && saved.estado) {
+        await comunicadoPush(saved.idcomunicado, pushMode);
+      }
 
       setToast({ open: true, msg: "Guardado" });
       history.replace("/comunicados");
@@ -208,6 +259,48 @@ export default function ComunicadoForm() {
             ))}
           </IonSelect>
           </IonItem>
+          {esCategoriaImagen && (
+            <IonItem lines="full">
+              <IonLabel position="stacked">Imagen del comunicado</IonLabel>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={onImagenChange}
+                style={{ marginTop: 12, marginBottom: 12 }}
+              />
+              {imagen && (
+                <p style={{ margin: "4px 0 12px" }}>
+                  Nueva imagen: <strong>{imagen.name}</strong>
+                </p>
+              )}
+              {!imagen && imagenActualUrl && !quitarImagen && (
+                <div style={{ margin: "12px 0", width: "100%" }}>
+                  <p style={{ margin: "0 0 8px" }}>
+                    Imagen actual: <strong>{model.imagenNombre ?? "comunicado"}</strong>
+                  </p>
+                  <img
+                    src={imagenActualUrl}
+                    alt="Imagen actual del comunicado"
+                    style={{ display: "block", maxWidth: 260, width: "100%", borderRadius: 8 }}
+                  />
+                  <IonButton
+                    size="small"
+                    fill="outline"
+                    color="danger"
+                    style={{ marginTop: 8 }}
+                    onClick={() => setQuitarImagen(true)}
+                  >
+                    Quitar imagen
+                  </IonButton>
+                </div>
+              )}
+              {quitarImagen && (
+                <p style={{ margin: "4px 0 12px", color: "var(--ion-color-danger)" }}>
+                  La imagen actual se eliminará al guardar.
+                </p>
+              )}
+            </IonItem>
+          )}
           <IonItem>
             <IonLabel>Publicado</IonLabel>
             <IonToggle

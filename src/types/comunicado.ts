@@ -8,6 +8,9 @@ export interface ComunicadoDTO {
   fuente?: string | null;
   estado: boolean;
   idCategoria: number;   // Long en back, number en TS
+  tieneImagen?: boolean | null;
+  imagenMimeType?: string | null;
+  imagenNombre?: string | null;
 
   // Solo lectura (decorativos)
   categoriaNombre?: string | null;

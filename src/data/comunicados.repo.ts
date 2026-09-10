@@ -45,6 +45,24 @@ export async function comunicadoUpdate(id: number, dto: Partial<ComunicadoDTO>, 
   return saved;
 }
 
+export async function comunicadoPush(id: number, sound: "default" | "sirena"): Promise<void> {
+  await http.post(`${PUSH}/${id}`, { sound }, { headers: authHeader() });
+}
+
+export async function comunicadoUploadImagen(id: number, imagen: File): Promise<ComunicadoDTO> {
+  const formData = new FormData();
+  formData.append("imagen", imagen);
+  const res = await http.post(`${BASE}/${id}/imagen`, formData, {
+    headers: { ...authHeader(), "Content-Type": "multipart/form-data" },
+  });
+  return unwrap<ComunicadoDTO>(res);
+}
+
+export async function comunicadoDeleteImagen(id: number): Promise<ComunicadoDTO> {
+  const res = await http.delete(`${BASE}/${id}/imagen`, { headers: authHeader() });
+  return unwrap<ComunicadoDTO>(res);
+}
+
 export async function comunicadoDelete(id: number): Promise<void> {
   await http.delete(`${BASE}/${id}`, { headers: authHeader() });
 }
