@@ -41,6 +41,7 @@ import RecomendacionesList from "./pages/RecomendacionesList";
 import RecomendacionForm from "./pages/RecomendacionForm";
 import PrecipitacionesPage from "./pages/PrecipitacionesPage";
 import NosotrosPage from "./pages/NosotrosPage";
+import PushPruebaPage from "./pages/PushPruebaPage";
 
 setupIonicReact();
 const App: React.FC = () => {
@@ -107,6 +108,7 @@ const App: React.FC = () => {
               <Route exact path="/recomendaciones/:id" component={RecomendacionForm} />
               <Route exact path="/precipitaciones" component={PrecipitacionesPage} />
               <Route exact path="/nosotros" component={NosotrosPage} />
+              <Route exact path="/push-prueba" component={PushPruebaPage} />
               {/* 404 simple */}
 
               <Route path="/login" exact component={LoginGoogle} />
