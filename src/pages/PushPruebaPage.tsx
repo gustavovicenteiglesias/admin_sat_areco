@@ -15,6 +15,7 @@ import {
   IonMenuButton,
   IonNote,
   IonPage,
+  IonSearchbar,
   IonSelect,
   IonSelectOption,
   IonSpinner,
@@ -52,7 +53,10 @@ export default function PushPruebaPage() {
   const [devices, setDevices] = useState<PushDevice[]>([]);
   const [selectedId, setSelectedId] = useState<number | undefined>();
   const [platformFilter, setPlatformFilter] = useState("");
-  const [stateFilter, setStateFilter] = useState("test-active");
+  const [stateFilter, setStateFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [lastSeenFrom, setLastSeenFrom] = useState("");
+  const [lastSeenTo, setLastSeenTo] = useState("");
   const [titulo, setTitulo] = useState("Prueba SAT Areco");
   const [contenido, setContenido] = useState("Notificación dirigida al teléfono de prueba");
   const [deeplink, setDeeplink] = useState("/tab1");
@@ -67,6 +71,35 @@ export default function PushPruebaPage() {
     () => devices.find((device) => device.id === selectedId),
     [devices, selectedId]
   );
+
+  const filteredDevices = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const from = lastSeenFrom ? new Date(lastSeenFrom).getTime() : null;
+    const to = lastSeenTo ? new Date(lastSeenTo).getTime() : null;
+
+    return devices.filter((device) => {
+      if (q) {
+        const haystack = [
+          device.alias,
+          device.platform,
+          device.model,
+          device.appVersion,
+          device.appBuild,
+          device.installationId,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+
+      const lastSeen = device.lastSeenAt ? new Date(device.lastSeenAt).getTime() : null;
+      if (from !== null && (!lastSeen || lastSeen < from)) return false;
+      if (to !== null && (!lastSeen || lastSeen > to)) return false;
+
+      return true;
+    });
+  }, [devices, search, lastSeenFrom, lastSeenTo]);
 
   const cargar = async () => {
     setLoading(true);
@@ -83,10 +116,11 @@ export default function PushPruebaPage() {
 
       const data = await pushDevicesList(filters);
       setDevices(data);
-      if (data.length && (!selectedId || !data.some((d) => d.id === selectedId))) {
-        setSelectedId(data[0].id);
+      const firstTestActive = data.find((device) => device.active && device.isTest);
+      if (firstTestActive && (!selectedId || !data.some((d) => d.id === selectedId))) {
+        setSelectedId(firstTestActive.id);
       }
-      if (!data.length) setSelectedId(undefined);
+      if (!data.length || !data.some((d) => d.id === selectedId)) setSelectedId(firstTestActive?.id);
     } catch (error: any) {
       setToast(error?.response?.data?.message ?? "No se pudieron cargar los dispositivos");
     } finally {
@@ -171,6 +205,15 @@ export default function PushPruebaPage() {
 
         <IonList>
           <IonItem>
+            <IonLabel position="stacked">Buscar dispositivo</IonLabel>
+            <IonSearchbar
+              value={search}
+              debounce={250}
+              placeholder="Alias, modelo, versión o installationId"
+              onIonInput={(event) => setSearch(event.detail.value ?? "")}
+            />
+          </IonItem>
+          <IonItem>
             <IonLabel>Filtro plataforma</IonLabel>
             <IonSelect value={platformFilter} onIonChange={(event) => setPlatformFilter(event.detail.value)}>
               <IonSelectOption value="">Todas</IonSelectOption>
@@ -182,12 +225,28 @@ export default function PushPruebaPage() {
           <IonItem>
             <IonLabel>Filtro estado</IonLabel>
             <IonSelect value={stateFilter} onIonChange={(event) => setStateFilter(event.detail.value)}>
+              <IonSelectOption value="all">Todos</IonSelectOption>
               <IonSelectOption value="test-active">Prueba activos</IonSelectOption>
               <IonSelectOption value="test">Dispositivos de prueba</IonSelectOption>
               <IonSelectOption value="active">Activos</IonSelectOption>
               <IonSelectOption value="inactive">Inactivos</IonSelectOption>
-              <IonSelectOption value="all">Todos</IonSelectOption>
             </IonSelect>
+          </IonItem>
+          <IonItem>
+            <IonLabel position="stacked">Última conexión desde</IonLabel>
+            <IonInput
+              type="datetime-local"
+              value={lastSeenFrom}
+              onIonInput={(event) => setLastSeenFrom(event.detail.value ?? "")}
+            />
+          </IonItem>
+          <IonItem>
+            <IonLabel position="stacked">Última conexión hasta</IonLabel>
+            <IonInput
+              type="datetime-local"
+              value={lastSeenTo}
+              onIonInput={(event) => setLastSeenTo(event.detail.value ?? "")}
+            />
           </IonItem>
         </IonList>
 
@@ -196,10 +255,26 @@ export default function PushPruebaPage() {
             {loading && <IonSpinner slot="start" name="crescent" />}
             Actualizar listado
           </IonButton>
+          <IonButton
+            fill="clear"
+            disabled={!search && !lastSeenFrom && !lastSeenTo && !platformFilter && stateFilter === "all"}
+            onClick={() => {
+              setSearch("");
+              setLastSeenFrom("");
+              setLastSeenTo("");
+              setPlatformFilter("");
+              setStateFilter("all");
+            }}
+          >
+            Limpiar filtros
+          </IonButton>
+          <IonNote style={{ display: "block", marginTop: 8 }}>
+            Mostrando {filteredDevices.length} de {devices.length}. Para habilitar pruebas, buscá el dispositivo y activá “Dispositivo de prueba”.
+          </IonNote>
         </div>
 
         <IonList>
-          {devices.map((device) => {
+          {filteredDevices.map((device) => {
             const topics = new Set(device.subscriptions?.filter((s) => s.active).map((s) => s.topic));
             const checked = device.id === selectedId;
 
@@ -262,7 +337,7 @@ export default function PushPruebaPage() {
               </IonCard>
             );
           })}
-          {!loading && devices.length === 0 && (
+          {!loading && filteredDevices.length === 0 && (
             <IonItem>
               <IonLabel>No hay dispositivos con este filtro</IonLabel>
             </IonItem>
