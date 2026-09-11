@@ -51,7 +51,7 @@ const labelFor = (device: PushDevice) =>
 
 export default function PushPruebaPage() {
   const [devices, setDevices] = useState<PushDevice[]>([]);
-  const [selectedId, setSelectedId] = useState<number | undefined>();
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [platformFilter, setPlatformFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -67,9 +67,9 @@ export default function PushPruebaPage() {
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState("");
 
-  const selected = useMemo(
-    () => devices.find((device) => device.id === selectedId),
-    [devices, selectedId]
+  const selectedDevices = useMemo(
+    () => devices.filter((device) => selectedIds.includes(device.id)),
+    [devices, selectedIds]
   );
 
   const filteredDevices = useMemo(() => {
@@ -116,11 +116,9 @@ export default function PushPruebaPage() {
 
       const data = await pushDevicesList(filters);
       setDevices(data);
-      const firstTestActive = data.find((device) => device.active && device.isTest);
-      if (firstTestActive && (!selectedId || !data.some((d) => d.id === selectedId))) {
-        setSelectedId(firstTestActive.id);
-      }
-      if (!data.length || !data.some((d) => d.id === selectedId)) setSelectedId(firstTestActive?.id);
+      setSelectedIds((current) =>
+        current.filter((id) => data.some((device) => device.id === id && device.active && device.isTest))
+      );
     } catch (error: any) {
       setToast(error?.response?.data?.message ?? "No se pudieron cargar los dispositivos");
     } finally {
@@ -152,30 +150,40 @@ export default function PushPruebaPage() {
 
   const enviar = async () => {
     if (sending) return;
-    if (!selected) {
-      setToast("Seleccioná un dispositivo de prueba");
+    if (!selectedDevices.length) {
+      setToast("Seleccioná al menos un dispositivo de prueba");
       return;
     }
-    if (!selected.active || !selected.isTest) {
-      setToast("El dispositivo debe estar activo y marcado como prueba interna");
+    if (selectedDevices.some((device) => !device.active || !device.isTest)) {
+      setToast("Todos los destinos deben estar activos y marcados como prueba interna");
       return;
     }
 
     const ok = window.confirm(
-      `PRUEBA INTERNA\n\nDestino: ${labelFor(selected)}\nEnvío individual por token FCM.\n\nNo se enviará a topics productivos. ¿Continuar?`
+      `PRUEBA INTERNA\n\nDestinos: ${selectedDevices.map(labelFor).join(", ")}\nEnvío individual por token FCM.\n\nNo se enviará a topics productivos. ¿Continuar?`
     );
     if (!ok) return;
 
     setSending(true);
     try {
-      const messageId = await enviarPushDePruebaADispositivo(selected.id, {
-        titulo: titulo.trim() || undefined,
-        contenido: contenido.trim() || undefined,
-        deeplink: deeplink.trim() || undefined,
-        tipo: tipo.trim() || undefined,
-        sirena,
-      });
-      setToast(messageId ? `Prueba enviada. ID: ${messageId}` : "Prueba enviada");
+      const results = await Promise.allSettled(
+        selectedDevices.map((device) =>
+          enviarPushDePruebaADispositivo(device.id, {
+            titulo: titulo.trim() || undefined,
+            contenido: contenido.trim() || undefined,
+            deeplink: deeplink.trim() || undefined,
+            tipo: tipo.trim() || undefined,
+            sirena,
+          })
+        )
+      );
+      const okCount = results.filter((result) => result.status === "fulfilled").length;
+      const failCount = results.length - okCount;
+      setToast(
+        failCount
+          ? `Prueba enviada a ${okCount}; fallaron ${failCount}.`
+          : `Prueba enviada a ${okCount} dispositivo${okCount === 1 ? "" : "s"}.`
+      );
       await cargar();
     } catch (error: any) {
       setToast(error?.response?.data?.message ?? "No se pudo enviar la prueba");
@@ -276,13 +284,23 @@ export default function PushPruebaPage() {
         <IonList>
           {filteredDevices.map((device) => {
             const topics = new Set(device.subscriptions?.filter((s) => s.active).map((s) => s.topic));
-            const checked = device.id === selectedId;
+            const checked = selectedIds.includes(device.id);
+            const selectable = device.active && device.isTest;
 
             return (
               <IonCard key={device.id} color={checked ? "light" : undefined}>
                 <IonCardHeader>
                   <IonCardTitle>
-                    <IonButton fill={checked ? "solid" : "outline"} size="small" onClick={() => setSelectedId(device.id)}>
+                    <IonButton
+                      fill={checked ? "solid" : "outline"}
+                      size="small"
+                      disabled={!selectable}
+                      onClick={() =>
+                        setSelectedIds((current) =>
+                          checked ? current.filter((id) => id !== device.id) : [...current, device.id]
+                        )
+                      }
+                    >
                       {checked ? "Seleccionado" : "Seleccionar"}
                     </IonButton>{" "}
                     {labelFor(device)}
@@ -350,7 +368,7 @@ export default function PushPruebaPage() {
           </IonCardHeader>
           <IonCardContent>
             <IonNote className="ion-text-wrap" style={{ display: "block", marginBottom: 12 }}>
-              Destino: {selected ? labelFor(selected) : "ninguno"} · Envío individual por token FCM.
+              Destinos: {selectedDevices.length ? selectedDevices.map(labelFor).join(", ") : "ninguno"} · Envío individual por token FCM, uno por dispositivo.
             </IonNote>
             <IonList>
               <IonItem>
@@ -382,7 +400,7 @@ export default function PushPruebaPage() {
             <IonButton
               expand="block"
               color={sirena ? "danger" : "primary"}
-              disabled={sending || !selected || !selected.active || !selected.isTest}
+              disabled={sending || selectedDevices.length === 0}
               onClick={enviar}
             >
               {sending && <IonSpinner slot="start" name="crescent" />}
