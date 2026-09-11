@@ -241,7 +241,7 @@ export default function PushPruebaPage() {
             </IonSelect>
           </IonItem>
           <IonItem>
-            <IonLabel position="stacked">Última conexión desde</IonLabel>
+            <IonLabel position="stacked">Última actualización desde</IonLabel>
             <IonInput
               type="datetime-local"
               value={lastSeenFrom}
@@ -249,7 +249,7 @@ export default function PushPruebaPage() {
             />
           </IonItem>
           <IonItem>
-            <IonLabel position="stacked">Última conexión hasta</IonLabel>
+            <IonLabel position="stacked">Última actualización hasta</IonLabel>
             <IonInput
               type="datetime-local"
               value={lastSeenTo}
@@ -322,7 +322,7 @@ export default function PushPruebaPage() {
                   <p><b>Modelo:</b> {device.model || "Sin informar"}</p>
                   <p><b>Versión app:</b> {device.appVersion || "Sin dato"} {device.appBuild ? `(build ${device.appBuild})` : ""}</p>
                   <p><b>Installation ID:</b> {shortId(device.installationId)}</p>
-                  <p><b>Última conexión:</b> {formatDate(device.lastSeenAt)}</p>
+                  <p><b>Última actualización:</b> {formatDate(device.lastSeenAt)}</p>
                   <p>
                     <IonBadge color={device.active ? "success" : "medium"}>{device.active ? "Activo" : "Inactivo"}</IonBadge>{" "}
                     <IonBadge color={device.isTest ? "warning" : "medium"}>{device.isTest ? "Prueba interna" : "Normal"}</IonBadge>
